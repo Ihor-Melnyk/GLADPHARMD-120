@@ -1,28 +1,8 @@
-function setPropertyRequired(attributeName, boolValue = true) {
-  //обов"язкове
-  var attributeProps = EdocsApi.getControlProperties(attributeName);
-  attributeProps.required = boolValue;
-  EdocsApi.setControlProperties(attributeProps);
-}
-
-function setPropertyHidden(attributeName, boolValue = true) {
-  //приховане
-  var attributeProps = EdocsApi.getControlProperties(attributeName);
-  attributeProps.hidden = boolValue;
-  EdocsApi.setControlProperties(attributeProps);
-}
-
 function setPropertyDisabled(attributeName, boolValue = true) {
   //недоступне
   var attributeProps = EdocsApi.getControlProperties(attributeName);
   attributeProps.disabled = boolValue;
   EdocsApi.setControlProperties(attributeProps);
-}
-
-function setAttrValue(attributeCode, attributeValue) {
-  var attribute = EdocsApi.getAttributeValue(attributeCode);
-  attribute.value = attributeValue;
-  EdocsApi.setAttributeValue(attribute);
 }
 
 function clearAttribute(attributeCode, doNotClearOnInit, isDictionary) {
@@ -102,6 +82,101 @@ function onChangeCreateCounterparty() {
 
 function onCardInitialize() {
   onChangeCreateCounterparty();
+  setPropCreateCounterparty();
 }
 
 //2. Створення нового контрагента в шині
+function onTaskExecuteChecknewCounterparty(routeStage) {
+  if (routeStage.executionResult == "executed") {
+    var method = "edocsCreateDoc";
+    var methodData = {
+      createdById: EdocsApi.getEmployeeDataByEmployeeID(CurrentDocument.initiatorId).extId,
+      externalDocId: CurrentDocument.id.toString(),
+      inMessageCaseType: "contractor",
+      attributeValues: [],
+      tableAttributes: [],
+    };
+
+    methodData.attributeValues.push({ code: "edrpou", value: EdocsApi.getAttributeValue("counterpartyCodenew").value || "" });
+    methodData.attributeValues.push({ code: "shortName", value: EdocsApi.getAttributeValue("counterpartyNamenew").value });
+    methodData.attributeValues.push({ code: "fullName", value: EdocsApi.getAttributeValue("counterpartyFullName").value });
+    methodData.attributeValues.push({ code: "payerVAT", value: EdocsApi.getAttributeValue("PayerVAT").value == "Ні" ? false : true });
+    methodData.attributeValues.push({ code: "taxPayerStatus", value: EdocsApi.getAttributeValue("counterpartyTaxStatus").value });
+    methodData.attributeValues.push({ code: "rnokpp", value: EdocsApi.getAttributeValue("counterpartyVatNumber").value });
+    methodData.attributeValues.push({ code: "typeOfOwnership", value: setTypeOfOwnership(EdocsApi.getAttributeValue("counterpartyOwnershipType").value) });
+    methodData.attributeValues.push({ code: "legalAddress", value: EdocsApi.getAttributeValue("counterpartyLegalAddress").value });
+    methodData.attributeValues.push({ code: "Email", value: EdocsApi.getAttributeValue("counterpartyEmail").value });
+    methodData.attributeValues.push({ code: "Phone", value: EdocsApi.getAttributeValue("counterpartyPhone").value });
+    //Tables
+    methodData.tableAttributes.push({ code: "accounts", value: getAccountsTable(EdocsApi.getAttributeValue("TableOrganizationAccountNumber").value) });
+
+    //відправка в зонішню систему 1С
+    debugger;
+    var response = EdocsApi.runExternalFunction("1C", method, methodData);
+
+    if (response.data) {
+      if (response.data.docId) {
+        EdocsApi.message("Запис успішно створений. Ідентифікатор:" + response.data.docId);
+        EdocsApi.setAttributeValue({ code: "counterpartyId", value: response.data.docId });
+      } else if (response.data.error) {
+        if (response.data.error.validationErrors && response.data.error.validationErrors.length > 0) {
+          var errorMessage = "";
+          for (var i = 0; i < response.data.error.validationErrors.length; i++) {
+            errorMessage += response.data.error.validationErrors[i].message + "; ";
+          }
+          throw response.data.error.details + "  -  " + errorMessage;
+        }
+      } else {
+        throw "Не отримано відповіді від шини";
+      }
+    } else {
+      throw "Не отримано відповіді від шини";
+    }
+  }
+}
+
+function getAccountsTable(accounts) {
+  var result = [];
+  if (accounts && accounts.length > 0) {
+    accounts.forEach((account) => {
+      result.push([
+        { code: "number", value: EdocsApi.findElementByProperty("code", "OrganizationAccountNumber", account)?.value },
+        { code: "bank", value: EdocsApi.findElementByProperty("code", "OrganizationBankName", account)?.value },
+        { code: "ift", value: EdocsApi.findElementByProperty("code", "MFO", account)?.value },
+        { code: "currency", value: EdocsApi.findElementByProperty("code", "Currency", account)?.itemCode },
+      ]);
+    });
+  }
+  return result;
+}
+
+function setTypeOfOwnership(typeOfOwnership) {
+  debugger;
+  switch (typeOfOwnership) {
+    case "Юридична особа":
+      return "LEGAL_ENTITY";
+    case "Фізична особа-підприємець":
+      return "ENTREPRENEUR";
+    case "Приватна особа":
+      return "PERSON";
+    case "LEGAL_ENTITY":
+      return "Юридична особа";
+    case "ENTREPRENEUR":
+      return "Фізична особа-підприємець";
+    case "PERSON":
+      return "Приватна особа";
+
+    default:
+      return null;
+  }
+}
+
+function setPropCreateCounterparty() {
+  if (EdocsApi.getAttributeValue("counterpartyId").value) {
+    setPropertyDisabled("CreateCounterparty");
+  } else {
+    if (CurrentDocument.isDraft) {
+      setPropertyDisabled("CreateCounterparty", false);
+    }
+  }
+}
