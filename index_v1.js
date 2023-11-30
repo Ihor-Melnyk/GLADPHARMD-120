@@ -80,10 +80,10 @@ function setPropcounterparty() {
 
 function onChangeCreateCounterparty() {
   setPropcounterparty();
+  setcounterpartyOwnershipType();
 }
 
 function onCardInitialize() {
-  onChangeCreateCounterparty();
   setPropCreateCounterparty();
 }
 
@@ -180,5 +180,49 @@ function setPropCreateCounterparty() {
     if (CurrentDocument.isDraft) {
       setPropertyDisabled("CreateCounterparty", false);
     }
+  }
+}
+
+//3. Автозаповнення атрибутів «Форма власності» та «Валюта»
+function setcounterpartyOwnershipType() {
+  if (EdocsApi.getAttributeValue("CreateCounterparty").value === "true") {
+    EdocsApi.setAttributeValue({ code: "counterpartyOwnershipType", value: "Юридична особа", text: null });
+    EdocsApi.setAttributeValue({ code: "Currency", value: "1", text: "UAH", itemCode: "980", itemDictionary: "Currency" });
+    setPropertyDisabled("counterpartyOwnershipType");
+    setPropertyDisabled("Currency");
+  } else {
+    clearAttribute("counterpartyOwnershipType");
+    clearAttribute("Currency");
+    setPropertyDisabled("counterpartyOwnershipType", false);
+    setPropertyDisabled("Currency", false);
+  }
+}
+
+//4. Автозаповнення контрагента із зовнішнього довідника
+function onChangeContractorID() {
+  debugger;
+  var ContractorID = EdocsApi.getAttributeValue("ContractorID");
+
+  var type;
+
+  if (ContractorID.value) {
+    var counterpartyType = EdocsApi.getAttributeValue("counterpartyType");
+    if (counterpartyType.value) {
+      if (counterpartyType.value == "Покупець") {
+        type = "2";
+      } else {
+        type = "1";
+      }
+    } else {
+      throw "Не зазначено тип контрагента";
+    }
+
+    var ContractorData = EdocsApi.runExternalFunction("Contractors", "edocsGETCONTRACTOR?format=json&CONTRACTORID=" + ContractorID.value + "&CONTRACTORTYPE=" + type + "&MAXRESULTCOUNT=200", null, "get");
+
+    EdocsApi.setAttributeValue({ code: "counterpartyCode", value: ContractorData.data.Code });
+    EdocsApi.setAttributeValue({ code: "counterpartyName", value: ContractorData.data.ShortName });
+  } else {
+    clearAttribute("counterpartyCode");
+    clearAttribute("counterpartyName");
   }
 }
