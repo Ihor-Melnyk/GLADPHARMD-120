@@ -196,8 +196,7 @@ function setcounterpartyOwnershipType() {
     setPropertyDisabled("counterpartyOwnershipType");
     setPropertyDisabled("Currency");
   } else {
-    clearAttribute("counterpartyOwnershipType");
-    clearAttribute("Currency");
+    clearAttribute("TableOrganizationAccountNumber");
     setPropertyDisabled("counterpartyOwnershipType", false);
     setPropertyDisabled("Currency", false);
   }
