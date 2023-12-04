@@ -186,8 +186,13 @@ function setPropCreateCounterparty() {
 //3. Автозаповнення атрибутів «Форма власності» та «Валюта»
 function setcounterpartyOwnershipType() {
   if (EdocsApi.getAttributeValue("CreateCounterparty").value === "true") {
-    EdocsApi.setAttributeValue({ code: "counterpartyOwnershipType", value: "Юридична особа", text: null });
-    EdocsApi.setAttributeValue({ code: "Currency", value: "1", text: "UAH", itemCode: "980", itemDictionary: "Currency" });
+    var table = [];
+    table.push([
+      { code: "counterpartyOwnershipType", value: "Юридична особа", text: null },
+      { code: "Currency", value: "1", text: "UAH", itemCode: "980", itemDictionary: "Currency" },
+    ]);
+    EdocsApi.setAttributeValue({ code: "TableOrganizationAccountNumber", type: "table", value: table });
+
     setPropertyDisabled("counterpartyOwnershipType");
     setPropertyDisabled("Currency");
   } else {
