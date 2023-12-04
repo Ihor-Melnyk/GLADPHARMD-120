@@ -31,7 +31,7 @@ function setPropcounterparty() {
     EdocsApi.setControlProperties({ code: "PayerVAT", hidden: false, disabled: false, required: true });
     EdocsApi.setControlProperties({ code: "counterpartyTaxStatus", hidden: false, disabled: false, required: true });
     EdocsApi.setControlProperties({ code: "counterpartyVatNumber", hidden: false, disabled: false, required: false });
-    EdocsApi.setControlProperties({ code: "counterpartyOwnershipType", hidden: false, disabled: false, required: true });
+    EdocsApi.setControlProperties({ code: "counterpartyOwnershipType", hidden: false, disabled: true, required: true });
     EdocsApi.setControlProperties({ code: "counterpartyLegalAddress", hidden: false, disabled: false, required: true });
     EdocsApi.setControlProperties({ code: "counterpartyEmail", hidden: false, disabled: false, required: false });
     EdocsApi.setControlProperties({ code: "counterpartyPhone", hidden: false, disabled: false, required: false });
@@ -39,7 +39,7 @@ function setPropcounterparty() {
     EdocsApi.setControlProperties({ code: "OrganizationAccountNumber", hidden: false, disabled: false, required: true });
     EdocsApi.setControlProperties({ code: "OrganizationBankName", hidden: false, disabled: false, required: false });
     EdocsApi.setControlProperties({ code: "MFO", hidden: false, disabled: false, required: true });
-    EdocsApi.setControlProperties({ code: "Сurrency", hidden: false, disabled: false, required: true });
+    EdocsApi.setControlProperties({ code: "Currency", hidden: false, disabled: true, required: true });
   } else {
     if (CurrentDocument.isDraft) {
       clearAttribute("counterparty");
@@ -57,7 +57,7 @@ function setPropcounterparty() {
       clearAttribute("OrganizationAccountNumber");
       clearAttribute("OrganizationBankName");
       clearAttribute("MFO");
-      clearAttribute("Сurrency");
+      clearAttribute("Currency");
     }
     EdocsApi.setControlProperties({ code: "counterparty", hidden: false, disabled: false, required: true });
     EdocsApi.setControlProperties({ code: "counterpartyCodenew", hidden: true, disabled: true, required: false });
@@ -74,7 +74,7 @@ function setPropcounterparty() {
     EdocsApi.setControlProperties({ code: "OrganizationAccountNumber", hidden: true, disabled: true, required: false });
     EdocsApi.setControlProperties({ code: "OrganizationBankName", hidden: true, disabled: true, required: false });
     EdocsApi.setControlProperties({ code: "MFO", hidden: true, disabled: true, required: false });
-    EdocsApi.setControlProperties({ code: "Сurrency", hidden: true, disabled: true, required: false });
+    EdocsApi.setControlProperties({ code: "Currency", hidden: true, disabled: true, required: false });
   }
 }
 
@@ -186,19 +186,13 @@ function setPropCreateCounterparty() {
 //3. Автозаповнення атрибутів «Форма власності» та «Валюта»
 function setcounterpartyOwnershipType() {
   if (EdocsApi.getAttributeValue("CreateCounterparty").value === "true") {
-    var table = [];
-    table.push([
-      { code: "counterpartyOwnershipType", value: "Юридична особа", text: null },
-      { code: "Currency", value: "1", text: "UAH", itemCode: "980", itemDictionary: "Currency" },
-    ]);
-    EdocsApi.setAttributeValue({ code: "TableOrganizationAccountNumber", type: "table", value: table });
+    EdocsApi.setAttributeValue({ code: "counterpartyOwnershipType", value: "Юридична особа", text: null });
+  }
+}
 
-    setPropertyDisabled("counterpartyOwnershipType");
-    setPropertyDisabled("Currency");
-  } else {
-    clearAttribute("TableOrganizationAccountNumber");
-    setPropertyDisabled("counterpartyOwnershipType", false);
-    setPropertyDisabled("Currency", false);
+function onRowOpenTableOrganizationAccountNumber() {
+  if (EdocsApi.getAttributeValue("CreateCounterparty").value === "true") {
+    EdocsApi.setAttributeValue({ code: "Currency", value: "1", text: "UAH", itemCode: "980", itemDictionary: "Currency" });
   }
 }
 
