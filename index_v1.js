@@ -84,6 +84,7 @@ function onChangeCreateCounterparty() {
 }
 
 function onCardInitialize() {
+  onChangeCreateCounterparty();
   setPropCreateCounterparty();
 }
 
