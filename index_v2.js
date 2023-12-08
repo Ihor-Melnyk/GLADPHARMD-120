@@ -120,7 +120,8 @@ function onTaskExecuteChecknewCounterparty(routeStage) {
     if (response.data) {
       if (response.data.docId) {
         EdocsApi.message("Запис успішно створений. Ідентифікатор:" + response.data.docId);
-        EdocsApi.setAttributeValue({ code: "counterpartyId", value: response.data.docId });
+        //EdocsApi.setAttributeValue({ code: "counterpartyId", value: response.data.docId });
+        EdocsApi.setAttributeValue({ code: "counterpartyId", value: response.data.docId + "|creditor", text: null });
       } else if (response.data.error) {
         if (response.data.error.validationErrors && response.data.error.validationErrors.length > 0) {
           var errorMessage = "";
